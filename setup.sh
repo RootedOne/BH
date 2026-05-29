@@ -6,6 +6,7 @@ INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZIP_FILE="$INSTALL_DIR/backhaul_premium.zip"
 CORE_DIR="$INSTALL_DIR/backhaul-core"
 PACKAGE_NAME="backhaul_premium"
+SCRIPT_NAME="backhaul.sh"
 BIN_PATH="/usr/local/bin/bh-tui"
 
 URL_1="https://raw.githubusercontent.com/RootedOne/BH/main/backhaul_premium.zip"
@@ -49,8 +50,12 @@ download_file() {
 
     rm -f "$tmp_file"
 
+    if [ -z "$url" ] || [ "$url" = "URL_2_HERE" ]; then
+        return 1
+    fi
+
     if command -v curl >/dev/null 2>&1; then
-        if curl -L --fail -o "$tmp_file" "$url"; then
+        if curl -fL -o "$tmp_file" "$url"; then
             mv "$tmp_file" "$ZIP_FILE"
             return 0
         fi
@@ -171,6 +176,7 @@ EOF
 extract_and_install() {
     local tmp_dir
     local found_package
+    local found_script
     local script_path
 
     tmp_dir="$(mktemp -d)"
@@ -180,7 +186,8 @@ extract_and_install() {
 
     mkdir -p "$CORE_DIR"
 
-    found_package="$(find "$tmp_dir" -name "$PACKAGE_NAME" -print -quit)"
+    found_package="$(find "$tmp_dir" -type f -name "$PACKAGE_NAME" -print -quit)"
+    found_script="$(find "$tmp_dir" -type f -name "$SCRIPT_NAME" -print -quit)"
 
     if [ -z "$found_package" ]; then
         echo "Could not find $PACKAGE_NAME inside extracted zip."
@@ -188,20 +195,23 @@ extract_and_install() {
         exit 1
     fi
 
-    echo "Moving $PACKAGE_NAME to $CORE_DIR/"
-    rm -rf "$CORE_DIR/$PACKAGE_NAME"
-    mv "$found_package" "$CORE_DIR/"
-
-    script_path="$(find "$CORE_DIR" -type f -name "backhaul.sh" -print -quit)"
-
-    if [ -z "$script_path" ]; then
-        echo "Could not find backhaul.sh inside $CORE_DIR."
+    if [ -z "$found_script" ]; then
+        echo "Could not find $SCRIPT_NAME inside extracted zip."
         rm -rf "$tmp_dir"
         exit 1
     fi
 
-    echo "Making backhaul.sh executable..."
-    chmod +x "$script_path"
+    echo "Installing files to $CORE_DIR/"
+    rm -f "$CORE_DIR/$PACKAGE_NAME"
+    rm -f "$CORE_DIR/$SCRIPT_NAME"
+
+    mv "$found_package" "$CORE_DIR/"
+    mv "$found_script" "$CORE_DIR/"
+
+    chmod +x "$CORE_DIR/$PACKAGE_NAME"
+    chmod +x "$CORE_DIR/$SCRIPT_NAME"
+
+    script_path="$CORE_DIR/$SCRIPT_NAME"
 
     create_bh_tui_command "$script_path"
 
