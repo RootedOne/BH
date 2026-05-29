@@ -8,7 +8,7 @@ CORE_DIR="$INSTALL_DIR/backhaul-core"
 PACKAGE_NAME="backhaul_premium"
 BIN_PATH="/usr/local/bin/bh-tui"
 
-URL_1="https://github.com/RootedOne/BH/blob/main/backhaul_premium.zip"
+URL_1="https://raw.githubusercontent.com/RootedOne/BH/main/backhaul_premium.zip"
 URL_2="URL_2_HERE"
 
 run_privileged() {
